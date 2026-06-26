@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrueCare Onboarding — Review &amp; Sign</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --teal:#0f5b6e; --green:#5bb85b; --blue:#1a73e8; --ink:#1f2937; --muted:#6b7280;
+         --line:#d8dce1; --paper:#ffffff; --bg:#eceef1; --ok:#16a34a; --warn:#b45309; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;}
+  /* ── sticky progress header ── */
+  .bar{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);
+       box-shadow:0 1px 6px rgba(0,0,0,.06);}
+  .bar-inner{max-width:860px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .wordmark{font-size:20px;font-weight:700;color:var(--teal);letter-spacing:-.5px;white-space:nowrap;}
+  .wordmark span{color:var(--green);}
+  .prog-wrap{flex:1;min-width:180px;}
+  .prog-track{height:8px;background:#e6e8eb;border-radius:6px;overflow:hidden;}
+  .prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));transition:width .25s;}
+  .prog-text{font-size:12.5px;color:var(--muted);margin-top:5px;font-weight:500;}
+  .prog-text b{color:var(--ink);}
+  .bar-submit{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:11px 22px;font-size:14px;
+              font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;}
+  .bar-submit:disabled{background:#c4c8ce;cursor:not-allowed;}
+  /* ── document ── */
+  .wrap{max-width:860px;margin:22px auto 120px;padding:0 16px;}
+  .intro{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px 24px;margin-bottom:20px;}
+  .intro h1{font-size:19px;color:var(--teal);margin-bottom:6px;}
+  .intro p{font-size:13.5px;color:var(--muted);}
+  .page{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:40px 46px;margin-bottom:18px;
+        font-size:13px;color:#2a2f37;}
+  .page h2{font-size:15px;font-weight:700;margin:0 0 14px;letter-spacing:.01em;}
+  .page h3{font-size:13.5px;font-weight:700;margin:16px 0 6px;}
+  .page p{margin:0 0 10px;text-align:justify;}
+  .pg-num{display:block;text-align:center;font-size:10.5px;color:#9aa0a6;border-top:1px dashed #e1e4e8;margin-top:26px;padding-top:8px;}
+  .clause{margin-bottom:9px;}
+  .clause b{font-weight:700;}
+  /* inline fields */
+  .fill{display:inline-block;border:none;border-bottom:2px solid var(--blue);background:#eff6ff;
+        font-family:inherit;font-size:13px;color:var(--ink);padding:1px 8px;min-width:160px;outline:none;border-radius:3px 3px 0 0;}
+  .fill:focus{background:#dbeafe;}
+  .fill.short{min-width:90px;}
+  .fill.init{min-width:64px;width:64px;text-align:center;text-transform:uppercase;font-weight:700;}
+  .name-fill{font-weight:600;border-bottom:1px solid #c4c8ce;padding:0 4px;color:var(--teal);}
+  .ro{display:inline-block;border-bottom:1px solid #c4c8ce;padding:0 6px;color:var(--ink);min-width:120px;}
+  .sigline{display:inline-flex;align-items:flex-end;gap:8px;border-bottom:1px solid #c4c8ce;min-width:240px;min-height:34px;padding:0 6px 2px;}
+  .sigline img{max-height:30px;}
+  .sigline .ph{font-size:12px;color:#b3b8bf;font-style:italic;}
+  .lbl{font-weight:600;}
+  .req-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--blue);background:#e8f0fe;border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle;}
+  .done-tag{color:var(--ok);background:#dcfce7;}
+  /* ACH notice */
+  .ach-note{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:12.5px;color:var(--warn);margin:14px 0;}
+  .ach-field{color:#9aa0a6;}
+  .ach-field .ro{border-bottom:1px solid #e1e4e8;min-width:220px;}
+  /* signature pad */
+  .sigpad-card{background:#fff;border:2px solid var(--blue);border-radius:10px;padding:20px 22px;margin-bottom:18px;}
+  .sigpad-card h3{color:var(--teal);font-size:15px;margin-bottom:4px;}
+  .sigpad-card p{font-size:12.5px;color:var(--muted);margin-bottom:12px;}
+  #sigpad{width:100%;height:170px;border:1px dashed #b3b8bf;border-radius:8px;background:#fcfcfd;touch-action:none;display:block;}
+  .sig-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+  .clear-btn{background:#f3f4f6;border:1px solid var(--line);border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--ink);}
+  .consent{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:18px;font-size:13px;}
+  .consent input{margin-top:3px;width:17px;height:17px;flex-shrink:0;}
+  .footer-submit{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+                 box-shadow:0 -2px 10px rgba(0,0,0,.06);padding:12px 16px;z-index:50;}
+  .footer-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:14px;}
+  .footer-inner .msg{font-size:12.5px;color:var(--muted);flex:1;}
+  .big-submit{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .big-submit:disabled{background:#c4c8ce;cursor:not-allowed;}
+  /* done screen */
+  .done-screen{display:none;text-align:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:60px 30px;margin-top:40px;}
+  .done-screen .check{width:64px;height:64px;border-radius:50%;background:#dcfce7;color:var(--ok);font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .done-screen h2{color:var(--teal);font-size:22px;margin-bottom:8px;}
+  .done-screen p{color:var(--muted);font-size:14px;}
+  @media(max-width:600px){
+    .page{padding:26px 20px;}
+    .bar-submit{display:none;}
+    .fill{min-width:120px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ░░ STICKY PROGRESS HEADER ░░ -->
+<div class="bar">
+  <div class="bar-inner">
+    <div class="wordmark">True<span>Care</span></div>
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-text" id="progText"><b>5</b> required fields remaining</div>
+    </div>
+    <button class="bar-submit" id="topSubmit" disabled onclick="submitPacket()">Submit Signed Packet</button>
+  </div>
+</div>
+
+<div class="wrap" id="docWrap">
+
+  <div class="intro">
+    <h1>TrueCare Onboarding Docs</h1>
+    <p>Please review the full agreement below and complete the highlighted fields. The <b>Submit</b> button unlocks once every required field, initial, and your signature are complete.</p>
+  </div>
+
+  <!-- ══════════ PAGE 1 ══════════ -->
+  <div class="page">
+    <h2 style="text-align:center;margin-top:30px;">AGENCY NAME</h2>
+    <h2 style="text-align:center;">AGENT AGREEMENT</h2>
+    <span class="pg-num">Page 1 · Rev. 11-2024</span>
+  </div>
+
+  <!-- ══════════ INDEPENDENT CONTRACTOR AGREEMENT (p2) ══════════ -->
+  <div class="page">
+    <h2 style="text-align:center;">INDEPENDENT CONTRACTOR AGREEMENT</h2>
+    <p>This Independent Contractor Agreement (the "Agreement"), dated as of the Effective Date (as defined below), is entered into by and among AGENCY NAME, a Florida limited liability company operating as a General Agency ("GA"), and
+      <input class="fill req" id="f_name_p2" data-mirror="name" placeholder="Agent full legal name" autocomplete="name">, an Individual (the "Agent"). <span class="req-tag" id="tag_name">Required</span></p>
+    <h3>RECITALS</h3>
+    <p class="clause"><b>A.</b> WHEREAS, GA is a limited liability company organized under the laws of Florida that is engaged in the business of providing life insurance solutions;</p>
+    <p class="clause"><b>B.</b> WHEREAS, Agent is a duly licensed insurance agent whose National Producer Number (NPN) is
+      <input class="fill short req" id="f_npn" inputmode="numeric" placeholder="NPN #"> ; and <span class="req-tag" id="tag_npn">Required</span></p>
+    <p class="clause"><b>C.</b> WHEREAS, Agent desires to contract with GA to serve as an independent insurance agent of GA, and GA desires to contract with Agent, whereby Agent will serve as an independent agent of GA, pursuant to the terms and conditions of this Agreement.</p>
+    <p class="clause"><b>D.</b> NOW, THEREFORE, for and in consideration of the mutual covenants and agreements contained herein and other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the parties hereby agree as follows:</p>
+    <h3>AGREEMENT</h3>
+    <p class="clause"><b>1. Engagement.</b> GA hereby engages Agent and Agent hereby accepts the engagement of GA to serve as an independent insurance agent of GA in connection with the insurance products sold by Agent (the "Engagement") pursuant to the terms of this Agreement.</p>
+    <p class="clause"><b>2. Term.</b> The term of this Agreement shall commence on the Effective Date and shall thereafter continue for a period of one (1) year, unless terminated earlier pursuant to the remaining provisions of this Agreement (the "Term"). This Agreement shall automatically renew for successive one (1) year terms following the conclusion of the original Term unless either party provides written notice of its intent to terminate this Agreement within fifteen (15) days of the conclusion of the current Term.</p>
+    <p class="clause"><b>3. Independent Contractor.</b> Agent shall be retained as an independent contractor and shall not be considered under the provisions of this Agreement or otherwise as having employee status. Agent acknowledges and agrees that they are not an employee of GA for any purpose, including but not limited to payroll and employment tax withholding and reporting. Agent agrees to pay any and all federal, state, and local taxes of Agent, including self-employment taxes levied on account of the services performed by Agent. Agent also understands that they are not entitled to employment compensation, unemployment compensation and/or workers compensation and hereby waive any claim to such.</p>
+    <p class="clause"><b>4. Expenses.</b> All expenses incurred by Agent in performing under this Agreement shall be exclusively borne by Agent, except as specifically provided in this Agreement. Agent shall have no claim or shall not be entitled to reimbursement for any expenses, unless incurring such expenses was expressly authorized in writing by GA.</p>
+    <p class="clause"><b>5. Control of Business.</b> During the term of this Agreement, Agent shall retain sole and exclusive control over the manner, method, and means by which Agent performs services for GA, consistent with Agent's independent contractor status. While GA may define the scope of general services to be performed, GA shall not interfere with or direct the specific manner, time, or place of Agent's activities, except as expressly permitted herein. Recognizing that the insurance industry operates within a complex regulatory framework, GA reserves the right to establish and enforce reasonable standards of conduct, operational procedures, and compliance protocols necessary to ensure adherence to applicable laws, regulations, and industry best practices. Agent acknowledges that compliance with these standards is a material condition of this Agreement.</p>
+    <span class="pg-num">Page 2–3 · Rev. 11-2024</span>
+  </div>
+
+  <!-- ══════════ p3-7 condensed clauses (full text retained) ══════════ -->
+  <div class="page">
+    <p class="clause"><b>6. Appointment.</b> Once Agent and GA fully execute this Agreement, Agent shall be eligible to be appointed in their individual personal capacity to procure applications for insurance contracts on behalf of the individual insurance companies GA is contracted with. Notifications of appointment will be given via email. Agent agrees not to solicit applications for insurance contracts on behalf of an insurance company until Agent receives notification of appointment and is licensed to sell the applicable insurance products in the State of sale, and has all other required certifications/authorizations.</p>
+    <p class="clause"><b>7. Representations and Warranties.</b> Agent represents and warrants that Agent has never been (i) an officer, director, or partner in a firm involved in any bankruptcy or receivership proceedings; (ii) a party to any civil action filed within the three (3) years prior to the Effective Date; (iii) arrested or convicted for any crime or misdemeanor other than a traffic misdemeanor; (iv) the subject of an order entered by any state or federal agency finding a violation of laws, rules or regulations; or (v) involved in any other action which could adversely affect the reputation of GA. Agent agrees to abide by all policies, practices and procedures adopted by the Company that are mandated by law, regulation, administrative bulletin or FAQ, or binding industry requirement.</p>
+    <p class="clause"><b>8. Payment of Commissions.</b> All commissions for insurance products sold under this Agreement will be paid directly by the insurance carriers to the Agent, in accordance with the commission levels established by GA. GA retains the sole and absolute discretion to determine, amend, or modify commission levels at any time without prior notice. The Agent is solely responsible for staying informed of the current commission schedules. GA shall bear no liability for any discrepancies, delays, or disputes concerning commission payments, which remain the sole responsibility of the carriers.</p>
+    <p class="clause"><b>9. Chargebacks and Agent Liability.</b> The Agent assumes full and exclusive responsibility for all chargebacks arising from cancellations, lapses, rescissions, or any other events resulting in the reversal of previously paid commissions, whether during or after the term. The Agent agrees to indemnify and hold harmless GA against any and all liabilities, losses, damages, costs, or expenses (including attorneys' fees and court costs) incurred as a result of the Agent's actions, inactions, omissions, or breach. GA reserves the right to deduct chargebacks from future commissions, and the Agent agrees to remit any shortfall within three (3) business days of written notice.</p>
+    <p class="clause"><b>10. Personal Guarantee.</b> As a material condition of this Agreement, the Agent shall execute and be bound by a Personal Guarantee, personally obligating the Agent to reimburse GA for any and all chargeback amounts, costs, fees, or damages that roll up to GA as a result of the Agent's actions, inactions, omissions, or failure to perform. The Personal Guarantee is irrevocable and survives termination or expiration of this Agreement until all outstanding liabilities are fully satisfied.</p>
+    <p class="clause"><b>11. Termination.</b> This Agreement may be terminated by either party, with or without cause, upon thirty (30) days' prior written notice. GA reserves the right to terminate immediately and without prior notice in the event of the Agent's breach of any material provision, misconduct, failure to perform, or any act or omission that adversely affects GA's reputation, operations, or compliance. Termination shall not relieve the Agent of obligations related to chargebacks, reimbursements, or indemnities.</p>
+    <p class="clause"><b>12. Events After Termination.</b> Upon termination, the Agent shall: (a) cease all representations of affiliation with GA; (b) return or destroy all confidential and proprietary information within five (5) business days; (c) settle all outstanding financial obligations; (d) comply with all restrictive covenants; and (e) acknowledge GA may withhold final commission payments for up to one (1) year to account for pending chargebacks or disputes.</p>
+    <p class="clause"><b>13. Indemnification.</b> Agent agrees to indemnify, defend and hold GA, its subsidiaries, and their respective officers, directors, shareholders, and employees harmless from all claims, expenses and liability (including reasonable attorney's fees) arising out of or connected with Agent's performance, gross negligence, willful misconduct, or breach of obligations under this Agreement.</p>
+    <p class="clause"><b>14.–27.</b> Additional terms include Record Keeping; Notices; Governing Law &amp; Venue (Broward County, Florida); Confidentiality (2 years post-termination); Non-Solicitation (2 years); Non-Competition (1 year, 50-mile radius); Audit Rights; Waiver of Jury Trial; Legal Fees; Counterparts &amp; electronic-signature validity under the Federal E-SIGN Act and UETA; Severability; Agent's Opportunity to Review; and Automatic Rescission if not fully executed within five (5) days.</p>
+    <span class="pg-num">Pages 3–7 · Rev. 11-2024 · (full text on file)</span>
+  </div>
+
+  <!-- ══════════ PAGE 8 — ICA EXECUTION ══════════ -->
+  <div class="page">
+    <p style="text-align:center;font-weight:600;">IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.</p>
+    <div style="margin:24px 0 10px;">
+      <p><b>Company Name,</b> a Florida limited liability company</p>
+      <p style="margin-top:10px;"><span class="lbl">By:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Print Name:</span> <span class="ro">Andrew Cabrera</span></p>
+      <p><span class="lbl">Title:</span> <span class="ro">Managing Partner</span></p>
+      <p><span class="lbl">Date:</span> <span class="ro">06/25/2026</span></p>
+    </div>
+    <div style="margin-top:28px;">
+      <p><b>Agent:</b></p>
+      <p style="margin-top:10px;"><span class="lbl">By:</span> <span class="sigline"><img class="sig-preview" alt=""><span class="ph">your signature</span></span></p>
+      <p><span class="lbl">Print Name:</span> <span class="ro name-fill" data-mirror-out="name">—</span></p>
+      <p><span class="lbl">Title:</span> <span class="ro">Independent Agent</span></p>
+      <p><span class="lbl">Date:</span> <span class="ro" data-today>—</span></p>
+    </div>
+    <span class="pg-num">Page 8 · Rev. 11-2024</span>
+  </div>
+
+  <!-- ══════════ PAGE 9 — ACH (NOT COLLECTED HERE) ══════════ -->
+  <div class="page">
+    <h2 style="text-align:center;">ACH / DIRECT DEPOSIT AUTHORIZATION FORM</h2>
+    <p>By signing this Agreement, I hereby authorize Company Name, a Florida limited liability company, to send credit entries, as well as appropriate debit and adjustment entries, to my account indicated below. In the occurrence of a chargeback concerning any commissions disbursed to Agent, GA retains the authority to offset the equivalent amount from subsequent commissions or, alternatively, effectuate such deductions directly from Agent's bank account through the Automated Clearing House (ACH). The provisions of this section survive termination of this Agreement until all outstanding amounts are settled.</p>
+    <div class="ach-note">⚠ <b>Do not complete this section here.</b> For your security, TrueCare does <b>not</b> collect Social Security, driver's license, or bank account information through this portal. Direct-deposit setup is handled separately through TrueCare's secure payroll process.</div>
+    <div class="ach-field">
+      <p><span class="lbl">Name:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Social Security #:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Driver's License #:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Bank Name:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Account #:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Routing Transit #:</span> <span class="ro">&nbsp;</span></p>
+      <p><span class="lbl">Type of Account:</span> [ ] Checking &nbsp; [ ] Savings</p>
+    </div>
+    <span class="pg-num">Page 9 · Rev. 11-2024</span>
+  </div>
+
+  <!-- ══════════ CONFIDENTIALITY / IP / RESTRICTIVE COVENANTS (p10-15) ══════════ -->
+  <div class="page">
+    <h2>TRUECARE EMPLOYEE CONFIDENTIALITY, IP, AND RESTRICTIVE COVENANTS AGREEMENT</h2>
+    <p style="font-style:italic;color:var(--muted);">(Non-Disclosure + Work Product/IP Assignment + Non-Compete + Non-Solicit)</p>
+    <p style="margin-top:12px;">This Agreement is entered into as of the Effective Date by and between <b>TrueCare and Assurance LLC</b>, a Florida limited liability company, 2125 Biscayne Blvd, Miami, FL 33137, Suite 400E ("TrueCare" or "Company"), and <span class="name-fill" data-mirror-out="name">the Employee</span> ("Employee").</p>
+    <p class="clause"><b>1) Purpose and Consideration.</b> Employee will receive access to TrueCare's confidential information, systems, clients, processes, training, and business opportunities, supported by good and sufficient consideration including employment/continued engagement, compensation and benefits, and access to Confidential Information and specialized training.</p>
+    <p class="clause"><b>2) Confidential Information</b> means any non-public information disclosed to or learned by Employee, including trade secrets and know-how; customer/client/prospect/lead lists and data; call scripts, rebuttals, training materials, SOPs, QA scorecards; pricing, compensation structures, commissions, margins, revenues, forecasts; marketing strategies, funnels, targeting, analytics, conversion data, KPIs; vendor lists and lead sources; internal workflows, automations, CRM/dialer configurations, integrations; and any derivative materials reflecting the above.</p>
+    <p class="clause"><b>3) Exclusions.</b> Confidential Information excludes information that becomes public through no breach, was lawfully known before disclosure, was lawfully received from a third party, or was independently developed without use of Confidential Information.</p>
+    <p class="clause"><b>4) Confidentiality and Restricted Use.</b> Employee shall use Confidential Information only for TrueCare business; not disclose it except as authorized in writing; protect it with at least reasonable care; not copy, screenshot, photograph, record, download, export, or remove it except as strictly necessary; and not reverse engineer or attempt to derive underlying methods.</p>
+    <p class="clause"><b>5)–7) Need-to-Know; Security; Compelled Disclosure.</b> Disclosure is limited to authorized personnel with a legitimate need-to-know. Employee will follow security requirements (MFA, least-privilege, no shared credentials) and shall not store Confidential Information in personal email, cloud storage, messaging apps, or devices. If legally compelled to disclose, Employee will promptly notify TrueCare and disclose only what is legally required.</p>
+    <p class="clause"><b>8)–9) Work Product; IP Assignment; Ownership.</b> All Work Product created within the scope of employment, using TrueCare resources, or derived from Confidential Information is the exclusive property of TrueCare. To the extent not a "work made for hire," Employee irrevocably assigns to TrueCare all right, title, and interest, including all intellectual property rights.</p>
+    <p class="clause"><b>10)–13) Return of Property; Protected Rights; DTSA Notice; Term.</b> Upon request or termination, Employee will return and permanently delete all Confidential Information and certify compliance. Nothing prohibits lawful activity or communicating with a government agency. Per 18 U.S.C. § 1833(b), Employee is notified of whistleblower immunity for certain confidential disclosures. Confidentiality obligations continue for trade secrets as long as they remain secret, and for five (5) years for other Confidential Information.</p>
+    <p class="clause"><b>14)–20) Restrictive Covenants; Remedies; Fees; Governing Law; Severability; Entire Agreement; Electronic Signatures.</b> Employee agrees to Exhibit A. Breach may cause irreparable harm entitling TrueCare to injunctive relief. Governed by Florida law with exclusive venue in Miami-Dade County. This Agreement may be executed via electronic signatures, each deemed an original.</p>
+    <span class="pg-num">Pages 10–15 · TrueCare Confidentiality &amp; IP</span>
+  </div>
+
+  <!-- ══════════ PAGE 16 — EMPLOYEE EXECUTION + INITIALS 2-13 ══════════ -->
+  <div class="page">
+    <p><b>TRUECARE (Company):</b> TrueCare and Assurance LLC, 2125 Biscayne Blvd, Miami, FL 33137, Suite 400E</p>
+    <p style="margin-top:8px;"><span class="lbl">By:</span> <span class="ro">&nbsp;</span> &nbsp; <span class="lbl">Name:</span> <span class="ro">Andrew Cabrera</span></p>
+    <p><span class="lbl">Title:</span> <span class="ro">Managing Partner</span> &nbsp; <span class="lbl">Date:</span> <span class="ro">06/24/2026</span></p>
+    <div style="margin-top:22px;">
+      <p><b>EMPLOYEE:</b></p>
+      <p style="margin-top:8px;"><span class="lbl">Signature:</span> <span class="sigline"><img class="sig-preview" alt=""><span class="ph">your signature</span></span></p>
+      <p><span class="lbl">Name:</span> <span class="ro name-fill" data-mirror-out="name">—</span></p>
+      <p><span class="lbl">Date:</span> <span class="ro" data-today>—</span></p>
+      <p style="margin-top:14px;"><span class="lbl">Employee Initials (Sections 2–13):</span>
+        <input class="fill init req" id="f_init_2_13" maxlength="4" placeholder="ABC"> <span class="req-tag" id="tag_init1">Initial</span></p>
+    </div>
+    <span class="pg-num">Page 16 · TrueCare Confidentiality &amp; IP</span>
+  </div>
+
+  <!-- ══════════ EXHIBIT A (p16-18) + INITIALS ══════════ -->
+  <div class="page">
+    <h2>EXHIBIT A — RESTRICTIVE COVENANTS (NON-COMPETE + NON-SOLICIT)</h2>
+    <p style="font-style:italic;color:var(--muted);">(TrueCare | ACA + Medicare | Palm Beach / Broward / Miami-Dade | 24 Months)</p>
+    <p class="clause"><b>A1) Legitimate Business Interests.</b> Employee acknowledges TrueCare has legitimate business interests including trade secrets, valuable confidential business information, substantial customer relationships, customer goodwill, and specialized training provided to Employee.</p>
+    <p class="clause"><b>A2) Definitions.</b> "Competitive Business" means any entity that, within the Territory, markets, sells, solicits, enrolls, services, brokers, or provides Health Insurance products the same as or substantially similar to TrueCare's. "Health Insurance" means ACA/Marketplace (FFM) plans, Medicare Advantage (MA/MAPD), Medicare Supplement (Medigap), and Medicare Part D plans. "Territory" means Palm Beach, Broward, and Miami-Dade Counties, Florida.</p>
+    <p class="clause"><b>A3)–A4) Restricted Period; Non-Compete.</b> The Restricted Period is twenty-four (24) months following termination for any reason. During employment and the Restricted Period, Employee shall not, within the Territory, perform Competitive Services for a Competitive Business (with a 2% passive-ownership exception for publicly traded companies).</p>
+    <p class="clause"><b>A5)–A9) Non-Solicitation; Tolling; Injunction.</b> During the Restricted Period, Employee shall not solicit or accept Health Insurance business from Restricted Customers/Prospects, nor solicit TrueCare employees or contractors, nor use or disclose Confidential Information to assist a Competitive Business. If Employee breaches, the Restricted Period is tolled. A court may reform any overbroad restriction to the maximum extent permitted by law.</p>
+    <p style="margin-top:18px;"><span class="lbl">Employee Initials (Exhibit A):</span>
+      <input class="fill init req" id="f_init_exhibit" maxlength="4" placeholder="ABC"> <span class="req-tag" id="tag_init2">Initial</span>
+      &nbsp; <span class="lbl">Date:</span> <span class="ro" data-today>—</span></p>
+    <span class="pg-num">Pages 16–18 · Exhibit A</span>
+  </div>
+
+  <!-- ══════════ HANDBOOK (p19-30) ══════════ -->
+  <div class="page">
+    <h2 style="text-align:center;">TrueCare Sales Agent Handbook</h2>
+    <p style="text-align:center;">Independent Contractor (1099) Handbook — Sales Agents Only</p>
+    <p style="text-align:center;margin-top:6px;"><span class="lbl">Effective Date:</span> <span class="ro" data-today>—</span> &nbsp; <span class="lbl">Version:</span> 1.0</p>
+    <p style="margin-top:16px;">This handbook outlines the standards, expectations, and policies that apply to all 1099 Sales Agents working with TrueCare ("the Company"). It exists to protect clients, protect the Company, and ensure a consistent, compliant, high-performing sales operation. This handbook may be updated at any time; agents may be required to re-acknowledge the most current version.</p>
+    <p class="clause" style="margin-top:12px;"><b>Key policies (summary; full handbook on file):</b></p>
+    <p class="clause"><b>1) Equal Opportunity / Anti-Harassment.</b> TrueCare maintains a professional environment free from discrimination, harassment, and retaliation. Concerns are reported to the Sales Director or HR.</p>
+    <p class="clause"><b>2)–3) Accommodations; Scheduling.</b> Reasonable disability/religious accommodations are considered. TrueCare provides company scheduling (agents do not self-schedule), with defined OEP/SEP/AEP office hours, minimum availability, and tardiness / no-call-no-show standards. Camera on for meetings; no calls from public places.</p>
+    <p class="clause"><b>4) Compensation, Performance, Coaching.</b> Commissions are paid weekly or bi-weekly based on carrier paid status. Carrier reversals may affect payouts. Disputes must be submitted within 24 hours of payout notification. QA scores below 70% trigger coaching and remediation.</p>
+    <p class="clause"><b>5)–7) Client Data, Security, Tools &amp; QA.</b> Agents must protect all client PII/PHI and may not store client data outside approved systems. <b>Hard rule:</b> no client data on personal devices, notes apps, personal Google Drive, spreadsheets, or external CRMs. Approved systems: GoHighLevel (CRM) and JustCall/TLD (dialer). All calls run through the approved dialer with recording disclosure; minimum 5 QA calls reviewed per agent per week.</p>
+    <p class="clause"><b>8)–10) Conflicts; Time Off; Separation.</b> Agents may only sell within TrueCare. Lead brokering, side deals, and moving clients are prohibited. Time off requires two (2) weeks' notice; AEP and OEP are blackout periods. Upon offboarding, access removal is immediate and confidentiality obligations continue.</p>
+    <span class="pg-num">Pages 19–30 · Sales Agent Handbook</span>
+  </div>
+
+  <!-- ══════════ HANDBOOK ACKNOWLEDGMENT (p30-31) ══════════ -->
+  <div class="page">
+    <h2>Acknowledgment and E-Signature</h2>
+    <p>By signing below, I acknowledge that I have read and understand the TrueCare Sales Agent Handbook and agree to follow all policies and standards contained within it, including confidentiality, security requirements, call recording disclosure requirements, and required system usage.</p>
+    <p style="margin-top:18px;"><span class="lbl">Agent Full Name:</span> <span class="ro name-fill" data-mirror-out="name">—</span></p>
+    <p><span class="lbl">Date:</span> <span class="ro" data-today>—</span></p>
+    <p><span class="lbl">E-Signature:</span> <span class="sigline"><img class="sig-preview" alt=""><span class="ph">your signature</span></span></p>
+    <span class="pg-num">Pages 30–31 · Acknowledgment</span>
+  </div>
+
+  <!-- ══════════ SIGNATURE PAD ══════════ -->
+  <div class="sigpad-card">
+    <h3>Draw your signature <span class="req-tag" id="tag_sig">Required</span></h3>
+    <p>This signature is applied to the Agent signature line, the Employee signature line, and the Handbook e-signature line.</p>
+    <canvas id="sigpad"></canvas>
+    <div class="sig-actions">
+      <span style="font-size:12px;color:var(--muted);">Use your finger, stylus, or mouse.</span>
+      <button class="clear-btn" onclick="clearSig()">Clear</button>
+    </div>
+  </div>
+
+  <!-- ══════════ CONSENT ══════════ -->
+  <label class="consent">
+    <input type="checkbox" id="f_consent">
+    <span>I agree to use electronic records and signatures, and I confirm the information I entered is accurate. I understand my signature above will be applied to each signature line in this packet. <span class="req-tag" id="tag_consent">Required</span></span>
+  </label>
+
+  <!-- done screen -->
+  <div class="done-screen" id="doneScreen">
+    <div class="check">✓</div>
+    <h2>Packet submitted</h2>
+    <p>Thank you. Your signed onboarding packet has been securely delivered to TrueCare. You may close this tab.</p>
+  </div>
+
+</div>
+
+<!-- ░░ FIXED FOOTER SUBMIT ░░ -->
+<div class="footer-submit" id="footerBar">
+  <div class="footer-inner">
+    <span class="msg" id="footerMsg"><b>5</b> required fields remaining</span>
+    <button class="big-submit" id="bottomSubmit" disabled onclick="submitPacket()">Submit Signed Packet</button>
+  </div>
+</div>
+
+<script>
+  var AID = {{ aid|tojson }};
+  var ALREADY = {{ already_signed|tojson }};
+
+  // ── today's date (mm/dd/yyyy) ──
+  var today = new Date();
+  var todayStr = ('0'+(today.getMonth()+1)).slice(-2)+'/'+('0'+today.getDate()).slice(-2)+'/'+today.getFullYear();
+  document.querySelectorAll('[data-today]').forEach(function(el){ el.textContent = todayStr; });
+
+  // ── live mirror: legal name → all "Print Name / Name / Agent Full Name" spots ──
+  var nameInput = document.getElementById('f_name_p2');
+  function mirrorName(){
+    var v = nameInput.value.trim();
+    document.querySelectorAll('[data-mirror-out="name"]').forEach(function(el){ el.textContent = v || '—'; });
+  }
+  nameInput.addEventListener('input', function(){ mirrorName(); updateProgress(); });
+
+  // ── required field registry ──
+  var reqInputs = ['f_name_p2','f_npn','f_init_2_13','f_init_exhibit'];
+  function fieldFilled(id){ return (document.getElementById(id).value || '').trim().length > 0; }
+
+  // ── signature pad ──
+  var canvas = document.getElementById('sigpad');
+  var ctx = canvas.getContext('2d');
+  var drawing = false, hasInk = false, last = null;
+  function sizeCanvas(){
+    var ratio = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var data = hasInk ? canvas.toDataURL() : null;
+    canvas.width = rect.width * ratio; canvas.height = rect.height * ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineWidth = 2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#0b1f5b';
+    if(data){ var img=new Image(); img.onload=function(){ctx.drawImage(img,0,0,rect.width,rect.height);}; img.src=data; }
+  }
+  window.addEventListener('resize', sizeCanvas);
+  setTimeout(sizeCanvas, 50);
+  function pos(e){
+    var rect = canvas.getBoundingClientRect();
+    var t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+  function start(e){ drawing=true; last=pos(e); e.preventDefault(); }
+  function move(e){
+    if(!drawing) return;
+    var p = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+    last = p; hasInk = true; e.preventDefault();
+  }
+  function end(){ if(drawing){ drawing=false; refreshSigPreviews(); updateProgress(); } }
+  canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',end);
+  canvas.addEventListener('touchstart',start,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',end);
+  function clearSig(){ ctx.clearRect(0,0,canvas.width,canvas.height); hasInk=false; refreshSigPreviews(); updateProgress(); }
+  function sigDataUrl(){ return canvas.toDataURL('image/png'); }
+  function refreshSigPreviews(){
+    var url = hasInk ? sigDataUrl() : '';
+    document.querySelectorAll('.sig-preview').forEach(function(img){
+      if(url){ img.src=url; img.style.display='inline'; img.parentNode.querySelector('.ph').style.display='none'; }
+      else { img.removeAttribute('src'); img.style.display='none'; img.parentNode.querySelector('.ph').style.display='inline'; }
+    });
+  }
+
+  // ── progress + guard ──
+  var consent = document.getElementById('f_consent');
+  consent.addEventListener('change', updateProgress);
+  ['f_npn','f_init_2_13','f_init_exhibit'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', updateProgress);
+  });
+  function markTag(tagId, ok){
+    var t = document.getElementById(tagId); if(!t) return;
+    t.classList.toggle('done-tag', ok); t.textContent = ok ? '✓' : t.getAttribute('data-base') || t.textContent;
+  }
+  function updateProgress(){
+    var total = reqInputs.length + 2; // inputs + signature + consent
+    var done = 0;
+    reqInputs.forEach(function(id){ if(fieldFilled(id)) done++; });
+    if(hasInk) done++;
+    if(consent.checked) done++;
+    var remaining = total - done;
+    var pct = Math.round(done/total*100);
+    document.getElementById('progFill').style.width = pct + '%';
+    var txt = remaining===0 ? '✓ All fields complete — ready to submit' : '<b>'+remaining+'</b> required field'+(remaining===1?'':'s')+' remaining';
+    document.getElementById('progText').innerHTML = txt;
+    document.getElementById('footerMsg').innerHTML = txt;
+    var ready = remaining===0;
+    document.getElementById('topSubmit').disabled = !ready;
+    document.getElementById('bottomSubmit').disabled = !ready;
+    // tag states
+    markTagState('tag_name', fieldFilled('f_name_p2'));
+    markTagState('tag_npn', fieldFilled('f_npn'));
+    markTagState('tag_init1', fieldFilled('f_init_2_13'));
+    markTagState('tag_init2', fieldFilled('f_init_exhibit'));
+    markTagState('tag_sig', hasInk);
+    markTagState('tag_consent', consent.checked);
+  }
+  function markTagState(id, ok){
+    var t=document.getElementById(id); if(!t) return;
+    if(!t.getAttribute('data-base')) t.setAttribute('data-base', t.textContent);
+    t.classList.toggle('done-tag', ok);
+    t.textContent = ok ? '✓ Done' : t.getAttribute('data-base');
+  }
+
+  // ── submit ──
+  function submitPacket(){
+    var btnT=document.getElementById('topSubmit'), btnB=document.getElementById('bottomSubmit');
+    btnT.disabled=true; btnB.disabled=true; btnB.textContent='Submitting…';
+    var payload = {
+      full_name: nameInput.value.trim(),
+      npn: document.getElementById('f_npn').value.trim(),
+      init_2_13: document.getElementById('f_init_2_13').value.trim(),
+      init_exhibit: document.getElementById('f_init_exhibit').value.trim(),
+      date: todayStr,
+      signature: sigDataUrl(),
+      consent: true
+    };
+    fetch('/api/sign/'+AID+'/submit', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    }).then(function(r){return r.json();}).then(function(res){
+      if(res.status==='completed'){
+        document.getElementById('docWrap').querySelectorAll('.page,.sigpad-card,.consent,.intro').forEach(function(n){n.style.display='none';});
+        document.getElementById('doneScreen').style.display='block';
+        document.getElementById('footerBar').style.display='none';
+        window.scrollTo({top:0,behavior:'smooth'});
+      } else {
+        alert(res.error || 'Submission failed. Please try again.');
+        btnB.textContent='Submit Signed Packet'; updateProgress();
+      }
+    }).catch(function(){
+      alert('Network error. Please try again.');
+      btnB.textContent='Submit Signed Packet'; updateProgress();
+    });
+  }
+
+  if(ALREADY){
+    document.getElementById('docWrap').querySelectorAll('.page,.sigpad-card,.consent,.intro').forEach(function(n){n.style.display='none';});
+    var ds=document.getElementById('doneScreen');
+    ds.querySelector('h2').textContent='Already signed';
+    ds.querySelector('p').textContent='This packet has already been completed. You may close this tab.';
+    ds.style.display='block';
+    document.getElementById('footerBar').style.display='none';
+  }
+  updateProgress();
+</script>
+</body>
+</html>
